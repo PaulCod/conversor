@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+interface CryptoData {
+  BTC: { BRL: number };
+  ETH: { BRL: number };
+}
+
 function App() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [real, setReal] = useState(0);
-  const [btcAmount, setBtcAmount] = useState(0);
-  const [ethAmount, setEthAmount] = useState(0);
+  const [data, setData] = useState<CryptoData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [real, setReal] = useState<number>(0);
+  const [btcAmount, setBtcAmount] = useState<number>(0);
+  const [ethAmount, setEthAmount] = useState<number>(0);
+
+  console.log(real)
 
   useEffect(() => {
     setLoading(true);
@@ -18,11 +25,11 @@ function App() {
         }
         return res.json();
       })
-      .then((data) => {
+      .then((data: CryptoData) => {
         setData(data);
         setLoading(false);
       })
-      .catch((error) => {
+      .catch((error: Error) => {
         setError(error);
         setLoading(false);
       });
@@ -32,24 +39,25 @@ function App() {
     return <h1>Loading...</h1>;
   }
 
-  if (error != null || data === null) {
+  if (error) {
     return <h1>Error: {error.message}</h1>;
   }
 
-  const handleRealChange = (e) => {
+  if (!data) {
+    return <h1>Data not found</h1>;
+  }
+
+  const handleRealChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
-    if (value < 0 || isNaN(value)) {
-      setBtcAmount(0);
-      setEthAmount(0);
-      return;
-    }
     setReal(value);
-    if (data) {
+    if (!isNaN(value)) {
       setBtcAmount(value / data.BTC.BRL);
       setEthAmount(value / data.ETH.BRL);
+    } else {
+      setBtcAmount(0);
+      setEthAmount(0);
     }
   };
-  
 
   return (
     <section className="main-content">
@@ -68,7 +76,6 @@ function App() {
             id="real"
             placeholder="Digite o valor em reais"
             onChange={handleRealChange}
-            prefix="R$"
           />
           <p>Você pode comprar {btcAmount.toFixed(6)} BTC</p>
           <p>Você pode comprar {ethAmount.toFixed(6)} ETH</p>
